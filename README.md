@@ -3,12 +3,12 @@
 This project is a Java Maven application built with NetBeans IDE and Swing that applies a variety of **dithering** and **color quantization** methods to PNG/JPG/JPEG images, with options for color levels, processing scale, grayscale conversion, and dynamic range.
 
 <p align="center">
-  <img src="examples/ds3_gael_original_bayer.png" width="500" alt="Example Bayer 8×8">
-  <img src="examples/ds3_gael_original_Atkinson.png" width="500" alt="Example Atkinson">
+  <img src="examples/ds3_gael_original_bayer.png" width="350" alt="Example Bayer 8×8">
+  <img src="examples/ds3_gael_original_Atkinson.png" width="350" alt="Example Atkinson">
 </p>
 <p align="center">
-  <img src="examples/ds3_gael_simple_norange.png" width="500" alt="Example Simple no Range">
-  <img src="examples/ds3_gael_simple_withrange.png" width="500" alt="Example Simple with Range">
+  <img src="examples/ds3_gael_simple_norange.png" width="350" alt="Example Simple no Range">
+  <img src="examples/ds3_gael_simple_withrange.png" width="350" alt="Example Simple with Range">
 </p>
 
 ## Features
