@@ -1,4 +1,4 @@
-# DitherQuantizer
+# Dither
 
 This project is a Java Maven application built with NetBeans IDE and Swing that applies a variety of **dithering** and **color quantization** methods to PNG/JPG/JPEG images, with options for color levels, processing scale, grayscale conversion, and dynamic range.
 
@@ -24,3 +24,11 @@ This project is a Java Maven application built with NetBeans IDE and Swing that 
 - **Drag & Drop UI**: process multiple images at once by dragging PNG/JPG/JPEG files
 - **Live Preview** before saving
 - **Automatic Naming** of output based on chosen parameters
+
+## **How to use**
+
+**1.** Execute the `.jar` file located in the `/target` folder: `ColorBanding.jar`.
+**2.** Change the settings to desired values.
+**3.** Drag and drop the image(s) into the interface.
+**4.** Preview the changed image before saving.
+**5.** After it's done, the image(s) will be saved to the same folder as the original with the name: `originalname_Quantize[type,color_levels,scale].png`
