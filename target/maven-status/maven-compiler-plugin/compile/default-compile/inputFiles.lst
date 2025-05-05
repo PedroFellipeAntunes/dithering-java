@@ -1,0 +1,16 @@
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/BayerCalculator.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/ConvertRgbaInteger.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/DiffusionDithering.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/Operations.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/OrderedDithering.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/Quantization.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/Scaler.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/TST.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Dither/TYPE.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/FileManager/Grayscale.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/FileManager/PngConverter.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/FileManager/PngReader.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/FileManager/PngSaver.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Util/Main.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Windows/DropDownWindow.java
+/home/pfca/NetBeansProjects/Color Banding/src/main/java/Windows/ImageViewer.java

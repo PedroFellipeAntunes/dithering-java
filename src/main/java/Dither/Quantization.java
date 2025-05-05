@@ -1,0 +1,130 @@
+package Dither;
+
+import FileManager.Grayscale;
+import java.awt.image.BufferedImage;
+
+public class Quantization {
+    private final int min = 2, max = 256;
+    
+    public void applyQuantization(BufferedImage image, int levels, boolean rangeQ) {
+        if (levels < min || levels > max) {
+            throw new IllegalArgumentException("Color levels must be between " + min + " and " + max);
+        }
+        
+        if (rangeQ) {
+            dynamicRangeQuantization(image, levels);
+        } else {
+            colorQuantization(image, levels);
+        }
+    }
+    
+    private void colorQuantization(BufferedImage image, int levels) {
+        if (levels < min || levels > max) {
+            throw new IllegalArgumentException("Color quantity for quantization must be between " + min + " and " + max);
+        }
+
+        int width = image.getWidth();
+        int height = image.getHeight();
+        
+        ConvertRgbaInteger cri = new ConvertRgbaInteger();
+        
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int[] rgba = cri.convertFromIntegerToArray(image.getRGB(x, y));
+
+                rgba[1] = quantizeChannel(rgba[1], levels); // R
+                rgba[2] = quantizeChannel(rgba[2], levels); // G
+                rgba[3] = quantizeChannel(rgba[3], levels); // B
+//                rgba[0] = quantizeChannel(rgba[0], levels); // A
+
+                int newRGBA = cri.convertFromArrayToInteger(rgba);
+                image.setRGB(x, y, newRGBA);
+            }
+        }
+    }
+    
+    public int quantizeChannel(int value, int levels) {
+        double color = value / 255.0;
+        color = (Math.floor(color * (levels - 1) + 0.5)) / (levels - 1);
+        
+        return (int) (color * 255);
+    }
+    
+    private void dynamicRangeQuantization(BufferedImage image, int levels) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        
+        ConvertRgbaInteger cri = new ConvertRgbaInteger();
+        
+        double[] range = computeSymmetricLuminanceRange(image);
+        double newMin = range[0];
+        double newMax = range[1];
+        
+        // Quantize
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int[] rgba = cri.convertFromIntegerToArray(image.getRGB(x, y));
+                
+                for (int c = 1; c <= 3; c++) {
+                    rgba[c] = quantizeWithRange(rgba[c], levels, newMin, newMax);
+                }
+                
+                image.setRGB(x, y, cri.convertFromArrayToInteger(rgba));
+            }
+        }
+    }
+    
+    public double[] computeSymmetricLuminanceRange(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int totalPixels = width * height;
+
+        double minLum = Double.MAX_VALUE;
+        double maxLum = Double.MIN_VALUE;
+        double sumLum = 0.0;
+
+        ConvertRgbaInteger cri = new ConvertRgbaInteger();
+        Grayscale gs = new Grayscale();
+        
+        // Find the min/avg/max of image
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int[] rgba = cri.convertFromIntegerToArray(image.getRGB(x, y));
+                double lum = gs.bt709(rgba)[1]; // red
+
+                minLum = Math.min(minLum, lum);
+                maxLum = Math.max(maxLum, lum);
+                sumLum += lum;
+            }
+        }
+        
+        // Truncate min/max to be simmetric based on avg (avg becomes median)
+        double avgLum = sumLum / totalPixels;
+        double d1 = avgLum - minLum;
+        double d2 = maxLum - avgLum;
+        double d = Math.min(d1, d2);
+        
+        double newMin = avgLum - d;
+        double newMax = avgLum + d;
+        
+        return new double[]{newMin, newMax};
+    }
+    
+    /**
+     * Quantize within interval and then remap to 0-255
+     */
+    public int quantizeWithRange(int value, int levels, double min, double max) {
+        // Clamp
+        double v = Math.max(min, Math.min(max, value));
+        
+        // Normalize
+        double norm = (v - min) / (max - min);
+        
+        // Quantize
+        double qNorm = Math.floor(norm * (levels - 1) + 0.5) / (levels - 1);
+        double quantized = qNorm * (max - min) + min;
+        
+        // Back to 0-255
+        return (int) Math.round((quantized - min) / (max - min) * 255);
+    }
+}
