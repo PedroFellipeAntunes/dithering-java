@@ -15,11 +15,12 @@ public class Operations {
         Operations.scale = scale;
         Operations.colorLevels = colorLevels;
         
-        PngReader imageToPixelList = new PngReader();
+        PngReader pr = new PngReader();
         
-        //Get 2D matrix of pixels
-        BufferedImage image = imageToPixelList.readPNG(filePath, gray);
+        // Get 2D matrix of pixels
+        BufferedImage image = pr.readPNG(filePath, gray);
         
+        // Scale down the image if scale > 1
         Scaler sc = new Scaler();
         image = sc.scaleDown(image, scale);
         
@@ -78,7 +79,7 @@ public class Operations {
         
         image = sc.scaleUp(image, scale);
         
-        //View images before saving
+        // View images before saving
         ImageViewer viewer = new ImageViewer(image, filePath);
     }
     

@@ -5,11 +5,19 @@ import java.awt.image.BufferedImage;
 public class OrderedDithering {
     private final int[][] originalBayer;
     
+    /**
+     * Constructs an OrderedDithering instance using a custom Bayer matrix size.
+     *
+     * @param n the dimension (n×n) of the Bayer threshold matrix to generate
+     */
     public OrderedDithering(int n) {
         BayerCalculator bc = new BayerCalculator();
         this.originalBayer = bc.computeBayerMatrix(n);
     }
     
+    /**
+     * Constructs an OrderedDithering instance using a custom Bayer matrix size.
+     */
     public OrderedDithering() {
         BayerCalculator bc = new BayerCalculator();
         this.originalBayer = bc.computeBayerMatrix(2);
@@ -49,6 +57,13 @@ public class OrderedDithering {
         return normalizedBayer;
     }
     
+    /**
+     * Applies ordered dithering to the given image by adding the threshold
+     * matrix value to each normalized RGB channel, clamping results, and
+     * writing back to the image.
+     *
+     * @param image the BufferedImage to be dithered in-place
+     */
     public void applyDither(BufferedImage image) {
         double[][] bayer = normalizeBayer();
         ConvertRgbaInteger cri = new ConvertRgbaInteger();

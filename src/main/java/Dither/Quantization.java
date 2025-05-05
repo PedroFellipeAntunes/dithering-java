@@ -6,6 +6,17 @@ import java.awt.image.BufferedImage;
 public class Quantization {
     private final int min = 2, max = 256;
     
+    /**
+     * Applies color quantization to the given image, choosing between simple
+     * quantization and dynamic‐range quantization based on the rangeQ flag.
+     *
+     * @param image the BufferedImage to process
+     * @param levels the number of discrete color levels (must be between 2 and
+     * 256)
+     * @param rangeQ true to use dynamic range quantization, false for uniform
+     * color quantization
+     * @throws IllegalArgumentException if levels is outside the valid range
+     */
     public void applyQuantization(BufferedImage image, int levels, boolean rangeQ) {
         if (levels < min || levels > max) {
             throw new IllegalArgumentException("Color levels must be between " + min + " and " + max);
@@ -43,6 +54,14 @@ public class Quantization {
         }
     }
     
+    /**
+     * Maps a single 0–255 channel value to the nearest of the given number of
+     * levels, rounding to the nearest level center.
+     *
+     * @param value the original channel intensity (0–255)
+     * @param levels the number of quantization levels (must be ≥2)
+     * @return the quantized channel value in the range 0–255
+     */
     public int quantizeChannel(int value, int levels) {
         double color = value / 255.0;
         color = (Math.floor(color * (levels - 1) + 0.5)) / (levels - 1);
@@ -74,6 +93,13 @@ public class Quantization {
         }
     }
     
+    /**
+     * Computes a symmetric luminance range [min, max] around the average
+     * luminance so that min and max are equidistant from the mean.
+     *
+     * @param image the BufferedImage from which luminance is measured
+     * @return a double array of size 2: [min, max]
+     */
     public double[] computeSymmetricLuminanceRange(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
@@ -111,7 +137,14 @@ public class Quantization {
     }
     
     /**
-     * Quantize within interval and then remap to 0-255
+     * Quantizes a channel value within the specified [min, max] interval into
+     * the given number of levels, then remaps it back to the 0–255 range.
+     *
+     * @param value the original channel intensity
+     * @param levels the number of quantization levels
+     * @param min the lower bound of the luminance interval
+     * @param max the upper bound of the luminance interval
+     * @return the quantized and remapped channel intensity (0–255)
      */
     public int quantizeWithRange(int value, int levels, double min, double max) {
         // Clamp

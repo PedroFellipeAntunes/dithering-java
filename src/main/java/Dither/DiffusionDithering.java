@@ -8,11 +8,26 @@ public class DiffusionDithering {
     private final ConvertRgbaInteger cri = new ConvertRgbaInteger();
     private final boolean rangeQ;
     
+    /**
+     * Constructs a DiffusionDithering instance with the specified number of
+     * quantization levels and whether to use dynamic‑range quantization.
+     *
+     * @param bitValue the number of discrete color levels for quantization
+     * (e.g., 2, 4, 8, …)
+     * @param rangeQ true to apply dynamic‑range quantization, false for uniform
+     * quantization
+     */
     public DiffusionDithering(int bitValue, boolean rangeQ) {
         this.bitValue = bitValue;
         this.rangeQ = rangeQ;
     }
     
+    /**
+     * Applies the Floyd–Steinberg error‑diffusion dithering algorithm to the
+     * image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applyFloydSteinberg(BufferedImage image) {
         double[][] floydSteinberg = {
             {0, 0, 7.0/16},
@@ -22,6 +37,12 @@ public class DiffusionDithering {
         dither(image, floydSteinberg);
     }
     
+    /**
+     * Applies the Jarvis–Judice–Ninke (JJN) error‑diffusion dithering algorithm
+     * to the image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applyJarvisJudiceNinke(BufferedImage image) {
         double[][] jjn = {
             {0, 0, 0, 7.0/48, 5.0/48},
@@ -32,6 +53,11 @@ public class DiffusionDithering {
         dither(image, jjn);
     }
     
+    /**
+     * Applies the Stucki error‑diffusion dithering algorithm to the image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applyStucki(BufferedImage image) {
         double[][] stucki = {
             {0, 0, 0, 8.0/42, 4.0/42},
@@ -42,6 +68,11 @@ public class DiffusionDithering {
         dither(image, stucki);
     }
     
+    /**
+     * Applies the Atkinson error‑diffusion dithering algorithm to the image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applyAtkinson(BufferedImage image) {
         // Added extra 0 to make it a 5 collumn matrix so it can actually work with my generic code for error diffusion
         double[][] atkinson = {
@@ -53,6 +84,11 @@ public class DiffusionDithering {
         dither(image, atkinson);
     }
     
+    /**
+     * Applies the Burkes error‑diffusion dithering algorithm to the image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applyBurkes(BufferedImage image) {
         double[][] burkes = {
             {0, 0, 0, 8.0/32, 4.0/32},
@@ -62,6 +98,11 @@ public class DiffusionDithering {
         dither(image, burkes);
     }
     
+    /**
+     * Applies the full Sierra error‑diffusion dithering algorithm to the image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applySierra(BufferedImage image) {
         double[][] sierra = {
             {0, 0, 0, 5.0/32, 3.0/32},
@@ -72,6 +113,12 @@ public class DiffusionDithering {
         dither(image, sierra);
     }
     
+    /**
+     * Applies the Two‑Row Sierra error‑diffusion dithering algorithm to the
+     * image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applyTwoRowSierra(BufferedImage image) {
         double[][] twoRowSierra = {
             {0, 0, 0, 4.0/16, 3.0/16},
@@ -81,6 +128,11 @@ public class DiffusionDithering {
         dither(image, twoRowSierra);
     }
     
+    /**
+     * Applies the Sierra Lite error‑diffusion dithering algorithm to the image.
+     *
+     * @param image the BufferedImage to be dithered in place
+     */
     public void applySierraLite(BufferedImage image) {
         double[][] sierraLite = {
             {0, 0, 2.0/4},
