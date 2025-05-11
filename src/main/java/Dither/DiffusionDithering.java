@@ -3,10 +3,12 @@ package Dither;
 import java.awt.image.BufferedImage;
 
 public class DiffusionDithering {
-    private final int bitValue;
     private final Quantization b = new Quantization();
     private final ConvertRgbaInteger cri = new ConvertRgbaInteger();
+    
     private final boolean rangeQ;
+    private final int bitValue;
+    private final double spread;
     
     /**
      * Constructs a DiffusionDithering instance with the specified number of
@@ -17,9 +19,10 @@ public class DiffusionDithering {
      * @param rangeQ true to apply dynamic‑range quantization, false for uniform
      * quantization
      */
-    public DiffusionDithering(int bitValue, boolean rangeQ) {
+    public DiffusionDithering(int bitValue, boolean rangeQ, double spread) {
         this.bitValue = bitValue;
         this.rangeQ = rangeQ;
+        this.spread = spread;
     }
     
     /**
@@ -183,7 +186,8 @@ public class DiffusionDithering {
                     for (int dx = 0; dx < matrixWidth; dx++) {
                         int targetX = x + dx - matrixCenterX;
                         int targetY = y + dy;
-                        double factor = diffusion[dy][dx];
+                        
+                        double factor = diffusion[dy][dx] * spread;
 
                         if (factor != 0.0) {
                             diffuseError(image, targetX, targetY, error, factor);

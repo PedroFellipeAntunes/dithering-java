@@ -64,7 +64,7 @@ public class OrderedDithering {
      *
      * @param image the BufferedImage to be dithered in-place
      */
-    public void applyDither(BufferedImage image) {
+    public void applyDither(BufferedImage image, double spread) {
         double[][] bayer = normalizeBayer();
         ConvertRgbaInteger cri = new ConvertRgbaInteger();
 
@@ -83,7 +83,9 @@ public class OrderedDithering {
                 
                 // Apply dithering (clamp result between 0 and 1)
                 for (int i = 1; i < 4; i++) {
-                    channels[i] = Math.min(1.0, Math.max(0.0, channels[i] + dither));
+                    double value = channels[i] + (dither * spread);
+                    
+                    channels[i] = Math.min(1.0, Math.max(0.0, value));
                     rgba[i] = (int) (channels[i] * 255);
                 }
 

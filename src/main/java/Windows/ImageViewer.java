@@ -6,10 +6,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class ImageViewer extends JDialog {
-    private ImagePanel panel;
-    private JPanel buttonPanel;
-    private JButton saveButton;
-    private JButton goBackButton;
+    private final ImagePanel panel;
+    private final JPanel buttonPanel;
+    private final JButton saveButton;
+    private final JButton goBackButton;
+    
+    private final Operations operations;
     
     private boolean goBack = false;
     
@@ -20,8 +22,9 @@ public class ImageViewer extends JDialog {
         return goBack;
     }
     
-    public ImageViewer(BufferedImage image, String filePath) {
+    public ImageViewer(BufferedImage image, String filePath, Operations operations) {
         super((Frame) null, "Image Viewer", true);
+        this.operations = operations;
         
         panel = new ImagePanel(image);
         panel.setBackground(new Color(61, 56, 70));
@@ -36,7 +39,7 @@ public class ImageViewer extends JDialog {
         setButtonsVisuals(goBackButton);
         
         saveButton.addActionListener(e -> {
-            Operations.saveImage(image, filePath);
+            operations.saveImage(image, filePath);
             goBack = true;
             dispose();
         });

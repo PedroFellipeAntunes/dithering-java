@@ -6,13 +6,14 @@ Util/Main.class
 Dither/Scaler.class
 Dither/DiffusionDithering.class
 Dither/OrderedDithering.class
-Windows/DropDownWindow$2$1.class
-Dither/TST.class
 Windows/DropDownWindow.class
 Dither/BayerCalculator.class
+Windows/DropDownWindow$3$1.class
 Windows/ImageViewer$ImagePanel.class
 Windows/DropDownWindow$1.class
 Windows/ImageViewer.class
+Dither/Operations$Timeable.class
+Windows/DropDownWindow$3.class
 FileManager/PngSaver.class
 Dither/ConvertRgbaInteger.class
 FileManager/PngConverter.class
