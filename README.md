@@ -18,6 +18,7 @@ This project is a Java Maven application built with NetBeans IDE and Swing that 
   - Diffusion Dithering: Floyd–Steinberg, Jarvis–Judice–Ninke (JJN), Stucki, Atkinson, Burkes, Sierra
 - **Simple Quantization**: reduces color levels without dithering
 - **Adjustable Color Levels**: from 2 up to 256
+- **Adjustable Spread**: defining how much dither will be applied
 - **Processing Scale**: down and up scaling factor (1 to 5)
 - **Grayscale Mode**: convert image to gray before processing
 - **Dynamic Range Toggle**: enable or disable dynamic range in quantization
@@ -35,4 +36,4 @@ This project is a Java Maven application built with NetBeans IDE and Swing that 
 
 **4.** Preview the changed image before saving.
 
-**5.** After it's done, the image(s) will be saved to the same folder as the original with the name: `originalname_Quantize[type,color_levels,scale].png`
+**5.** After it's done, the image(s) will be saved to the same folder as the original with the name: `originalname_Quantize[type,color_levels,scale,spread].png`
