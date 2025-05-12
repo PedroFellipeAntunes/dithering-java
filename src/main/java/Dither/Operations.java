@@ -104,7 +104,7 @@ public class Operations {
      * @param filePath The original file path used as a base for the saved file.
      */
     public void saveImage(BufferedImage image, String filePath) {
-        String name = String.format("Quantize[%s,%dcolor,%d,%.2f]", operation, colorLevels, scale, spread);
+        String name = "Quantize[" + operation + "," + colorLevels + "," + scale + "," + spread + "]";
         
         new PngSaver().saveToFile(name, filePath, image);
     }
