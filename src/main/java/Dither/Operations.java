@@ -42,17 +42,20 @@ public class Operations {
      */
     public void processFile(String filePath) {
         BufferedImage image = measureTime("Reading File", () -> readImage(filePath));
+        
+        if (scale > 1) {
+            final BufferedImage downInput = image;
+            image = measureTime("Scaling Image Down", () -> new Scaler().scaleDown(downInput, scale));
+        }
+        
+        final BufferedImage ditherInput = image;
+        measureTime("Applying Dither Pattern: " + operation, () -> applyDithering(ditherInput));
 
         if (scale > 1) {
-            measureTime("Scaling Image Down", () -> new Scaler().scaleDown(image, scale));
+            final BufferedImage upInput = image;
+            image = measureTime("Scaling Image Up", () -> new Scaler().scaleUp(upInput, scale));
         }
-
-        measureTime("Applying Dither Pattern: " + operation, () -> applyDithering(image));
-
-        if (scale > 1) {
-            measureTime("Scaling Image Up", () -> new Scaler().scaleUp(image, scale));
-        }
-
+        
         new ImageViewer(image, filePath, this);
     }
 
