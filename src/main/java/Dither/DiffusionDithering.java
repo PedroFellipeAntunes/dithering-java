@@ -18,6 +18,7 @@ public class DiffusionDithering {
      * (e.g., 2, 4, 8, …)
      * @param rangeQ true to apply dynamic‑range quantization, false for uniform
      * quantization
+     * @param spread double value defines how much dither will be applied
      */
     public DiffusionDithering(int bitValue, boolean rangeQ, double spread) {
         this.bitValue = bitValue;

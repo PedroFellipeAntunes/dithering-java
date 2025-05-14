@@ -66,8 +66,7 @@ public class Operations {
     private void applyDithering(BufferedImage image) {
         switch (operation) {
             case Bayer8x8 -> {
-                new OrderedDithering(bayerDitherSize).applyDither(image, spread);
-                new Quantization().applyQuantization(image, colorLevels, rangeQ);
+                new OrderedDithering(bayerDitherSize, colorLevels, rangeQ, spread).applyDither(image);
             }
             case Floyd_Steinberg -> {
                 new DiffusionDithering(colorLevels, rangeQ, spread).applyFloydSteinberg(image);

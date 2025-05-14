@@ -3,94 +3,122 @@ package Dither;
 import java.awt.image.BufferedImage;
 
 public class OrderedDithering {
-    private final int[][] originalBayer;
+    private final int[][] bayerMatrix;
+    private final double[][] normalizedBayer;
+    private final Quantization quantizer = new Quantization();
+    private final ConvertRgbaInteger converter = new ConvertRgbaInteger();
     
+    private final int bitValue;
+    private final boolean rangeQ;
+    private final double spread;
+
     /**
-     * Constructs an OrderedDithering instance using a custom Bayer matrix size.
+     * Constructs an OrderedDithering instance with a custom Bayer matrix size.
      *
-     * @param n the dimension (n×n) of the Bayer threshold matrix to generate
+     * @param n the dimension (n × n) of the Bayer threshold matrix to generate
+     * @param bitValue the number of discrete color levels for quantization
+     * (e.g., 2, 4, 8…)
+     * @param rangeQ true to apply dynamic‐range quantization, false for uniform
+     * quantization
+     * @param spread the strength of the ordered‐dither effect to add per pixel
      */
-    public OrderedDithering(int n) {
+    public OrderedDithering(int n, int bitValue, boolean rangeQ, double spread) {
         BayerCalculator bc = new BayerCalculator();
-        this.originalBayer = bc.computeBayerMatrix(n);
+        this.bayerMatrix = bc.computeBayerMatrix(n);
+        this.normalizedBayer = normalizeBayer(this.bayerMatrix);
+        this.bitValue = bitValue;
+        this.rangeQ = rangeQ;
+        this.spread = spread;
     }
-    
+
     /**
-     * Constructs an OrderedDithering instance using a custom Bayer matrix size.
+     * Constructs an OrderedDithering instance using a default 2×2 Bayer matrix.
+     *
+     * @param bitValue the number of discrete color levels for quantization
+     * (e.g., 2, 4, 8…)
+     * @param rangeQ true to apply dynamic‐range quantization, false for uniform
+     * quantization
+     * @param spread the strength of the ordered‐dither effect to add per pixel
      */
-    public OrderedDithering() {
-        BayerCalculator bc = new BayerCalculator();
-        this.originalBayer = bc.computeBayerMatrix(2);
+    public OrderedDithering(int bitValue, boolean rangeQ, double spread) {
+        this(2, bitValue, rangeQ, spread);
     }
     
-    // Normalize and convert to (-1 <-> 1)
-    private double[][] normalizeBayer() {
-        int n = this.originalBayer.length;
+    private double[][] normalizeBayer(int[][] mat) {
+        int n = mat.length;
         double n2 = n * n;
-        
-        double[][] normalizedBayer = new double[n][n];
+        double[][] norm = new double[n][n];
         
         for (int y = 0; y < n; y++) {
             for (int x = 0; x < n; x++) {
-                normalizedBayer[y][x] = this.originalBayer[y][x] / n2;
+                norm[y][x] = mat[y][x] / n2;
             }
         }
         
-        double maxNormal = Double.NEGATIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
         
-        // Heighest value of matrix
         for (int y = 0; y < n; y++) {
             for (int x = 0; x < n; x++) {
-                if (normalizedBayer[y][x] > maxNormal) {
-                    maxNormal = normalizedBayer[y][x];
+                if (norm[y][x] > max) {
+                    max = norm[y][x];
                 }
             }
         }
         
-        // Subtract 1/2 * max from each element
+        double shift = 0.5 * max;
+        
         for (int y = 0; y < n; y++) {
             for (int x = 0; x < n; x++) {
-                normalizedBayer[y][x] -= 0.5 * maxNormal;
+                norm[y][x] -= shift;
             }
         }
         
-        return normalizedBayer;
+        return norm;
     }
     
     /**
-     * Applies ordered dithering to the given image by adding the threshold
-     * matrix value to each normalized RGB channel, clamping results, and
-     * writing back to the image.
+     * Applies ordered dithering and quantization to the provided image in
+     * place.
      *
-     * @param image the BufferedImage to be dithered in-place
+     * @param image the BufferedImage to be processed
      */
-    public void applyDither(BufferedImage image, double spread) {
-        double[][] bayer = normalizeBayer();
-        ConvertRgbaInteger cri = new ConvertRgbaInteger();
-
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int[] rgba = cri.convertFromIntegerToArray(image.getRGB(x, y));
+    public void applyDither(BufferedImage image) {
+        double min = 0, max = 255;
+        
+        if (rangeQ) {
+            double[] range = quantizer.computeSymmetricLuminanceRange(image);
+            min = range[0];
+            max = range[1];
+        }
+        
+        int w = image.getWidth(), h = image.getHeight();
+        int n = normalizedBayer.length;
+        
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int[] rgba = converter.convertFromIntegerToArray(image.getRGB(x, y));
                 
-                // Normalize rgba
-                double[] channels = new double[4];
-                for (int i = 1; i < 4; i++) {
-                    channels[i] = rgba[i] / 255.0;
+                double[] ch = new double[4];
+                
+                for (int i = 1; i <= 3; i++) {
+                    ch[i] = rgba[i] / 255.0;
                 }
                 
-                // Get the equivalent index in the bayer matrix
-                double dither = bayer[y % bayer.length][x % bayer.length];
+                double d = normalizedBayer[y % n][x % n] * spread;
                 
-                // Apply dithering (clamp result between 0 and 1)
-                for (int i = 1; i < 4; i++) {
-                    double value = channels[i] + (dither * spread);
+                for (int i = 1; i <= 3; i++) {
+                    double v = ch[i] + d;
+                    v = Math.min(1.0, Math.max(0.0, v));
+                    int raw = (int)(v * 255);
                     
-                    channels[i] = Math.min(1.0, Math.max(0.0, value));
-                    rgba[i] = (int) (channels[i] * 255);
+                    if (rangeQ) {
+                        rgba[i] = quantizer.quantizeWithRange(raw, bitValue, min, max);
+                    } else {
+                        rgba[i] = quantizer.quantizeChannel(raw, bitValue);
+                    }
                 }
-
-                int newRGBA = cri.convertFromArrayToInteger(rgba);
-                image.setRGB(x, y, newRGBA);
+                
+                image.setRGB(x, y, converter.convertFromArrayToInteger(rgba));
             }
         }
     }
