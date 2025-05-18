@@ -10,6 +10,10 @@ This project is a Java Maven application built with NetBeans IDE and Swing that 
   <img src="examples/ds3_gael_simple_norange.png" width="350" alt="Example Simple no Range">
   <img src="examples/ds3_gael_simple_withrange.png" width="350" alt="Example Simple with Range">
 </p>
+<p align="center">
+  <img src="examples/tulips_simpleRGB.png" width="350" alt="Example RGB">
+  <img src="examples/tulips_simpleHSB.png" width="350" alt="Example HSB">
+</p>
 
 ## Features
 
