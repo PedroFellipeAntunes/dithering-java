@@ -72,7 +72,7 @@ public class RgbQuantization {
         int width = image.getWidth();
         int height = image.getHeight();
         
-        double[] range = LuminanceRangeCalculator.compute(image);
+        double[] range = LuminanceRangeCalculator.compute(image, false);
         double newMin = range[0];
         double newMax = range[1];
         

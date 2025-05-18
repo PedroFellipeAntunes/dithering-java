@@ -12,7 +12,7 @@ public class RgbQuantizer implements ColorQuantizer {
 
     @Override
     public void prepare(BufferedImage image, int levels) {
-        double[] range = LuminanceRangeCalculator.compute(image);
+        double[] range = LuminanceRangeCalculator.compute(image, false);
         min = range[0];
         max = range[1];
     }

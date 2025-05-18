@@ -56,7 +56,7 @@ public class HsbQuantization {
         int w = image.getWidth();
         int h = image.getHeight();
 
-        double[] range = LuminanceRangeCalculator.compute(image);
+        double[] range = LuminanceRangeCalculator.compute(image, true);
         double minB = range[0], maxB = range[1];
 
         for (int y = 0; y < h; y++) {

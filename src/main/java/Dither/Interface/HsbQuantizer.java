@@ -16,7 +16,7 @@ public class HsbQuantizer implements ColorQuantizer {
 
     @Override
     public void prepare(BufferedImage image, int levels) {
-        double[] range = LuminanceRangeCalculator.compute(image);
+        double[] range = LuminanceRangeCalculator.compute(image, true);
         minB = range[0];
         maxB = range[1];
     }
