@@ -1,12 +1,17 @@
 package Dither;
 
+import Dither.Util.DataConverter;
+import Dither.Util.BayerCalculator;
+
+import Dither.Interface.ColorQuantizer;
+
 import java.awt.image.BufferedImage;
 
 public class OrderedDithering {
     private final int[][] bayerMatrix;
     private final double[][] normalizedBayer;
-    private final Quantization quantizer = new Quantization();
-    private final ConvertRgbaInteger converter = new ConvertRgbaInteger();
+    private final ColorQuantizer quantizer;
+    private final DataConverter cd = new DataConverter();
     
     private final int bitValue;
     private final boolean rangeQ;
@@ -22,10 +27,12 @@ public class OrderedDithering {
      * quantization
      * @param spread the strength of the ordered‐dither effect to add per pixel
      */
-    public OrderedDithering(int n, int bitValue, boolean rangeQ, double spread) {
+    public OrderedDithering(ColorQuantizer quantizer, int n, int bitValue, boolean rangeQ, double spread) {
         BayerCalculator bc = new BayerCalculator();
         this.bayerMatrix = bc.computeBayerMatrix(n);
         this.normalizedBayer = normalizeBayer(this.bayerMatrix);
+        
+        this.quantizer = quantizer;
         this.bitValue = bitValue;
         this.rangeQ = rangeQ;
         this.spread = spread;
@@ -40,8 +47,8 @@ public class OrderedDithering {
      * quantization
      * @param spread the strength of the ordered‐dither effect to add per pixel
      */
-    public OrderedDithering(int bitValue, boolean rangeQ, double spread) {
-        this(2, bitValue, rangeQ, spread);
+    public OrderedDithering(ColorQuantizer quantizer, int bitValue, boolean rangeQ, double spread) {
+        this(quantizer, 2, bitValue, rangeQ, spread);
     }
     
     private double[][] normalizeBayer(int[][] mat) {
@@ -82,13 +89,9 @@ public class OrderedDithering {
      *
      * @param image the BufferedImage to be processed
      */
-    public void applyDither(BufferedImage image) {
-        double min = 0, max = 255;
-        
+    public void applyDither(BufferedImage image) {        
         if (rangeQ) {
-            double[] range = quantizer.computeSymmetricLuminanceRange(image);
-            min = range[0];
-            max = range[1];
+            quantizer.prepare(image, bitValue);
         }
         
         int w = image.getWidth(), h = image.getHeight();
@@ -96,7 +99,7 @@ public class OrderedDithering {
         
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                int[] rgba = converter.convertFromIntegerToArray(image.getRGB(x, y));
+                int[] rgba = cd.convertFromIntegerToArray(image.getRGB(x, y));
                 
                 double[] ch = new double[4];
                 
@@ -109,16 +112,18 @@ public class OrderedDithering {
                 for (int i = 1; i <= 3; i++) {
                     double v = ch[i] + d;
                     v = Math.min(1.0, Math.max(0.0, v));
-                    int raw = (int)(v * 255);
+                    int raw = (int) (v * 255);
                     
-                    if (rangeQ) {
-                        rgba[i] = quantizer.quantizeWithRange(raw, bitValue, min, max);
-                    } else {
-                        rgba[i] = quantizer.quantizeChannel(raw, bitValue);
-                    }
+                    int[] temp = rgba.clone();
+                    
+                    temp[i] = raw;
+                    
+                    int[] qPixel = quantizer.quantize(temp, bitValue, rangeQ);
+                    
+                    rgba[i] = qPixel[i];
                 }
                 
-                image.setRGB(x, y, converter.convertFromArrayToInteger(rgba));
+                image.setRGB(x, y, cd.convertFromArrayToInteger(rgba));
             }
         }
     }

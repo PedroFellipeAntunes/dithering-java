@@ -1,6 +1,7 @@
 package Windows;
 
-import Dither.TYPE;
+import Dither.Util.TYPE;
+
 import Dither.Operations;
 
 import javax.swing.*;
@@ -10,18 +11,21 @@ import java.awt.datatransfer.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 public class DropDownWindow {
     private JFrame frame;
     private JLabel dropLabel;
     private JSlider colorSlider, scaleSlider, spreadSlider;
     private JTextField colorField, scaleField, spreadField;
-    private JButton grayButton, dynamicButton;
+    private JButton grayButton, dynamicButton, hsbButton;
     private JComboBox<TYPE> typeComboBox;
 
-    private boolean rangeQuantization = false;
+    private boolean rangeQ = false;
     private boolean grayScale = false;
     private boolean loading = false;
+    private boolean useHsb = false;
 
     private double spread = 0.5;
     private final double minSpread = 0.0;
@@ -32,7 +36,7 @@ public class DropDownWindow {
     private final int minLevels = 2, maxLevels = 256;
 
     private int scale = 1;
-    private final int minScale = 1, maxScale = 5;
+    private final int minScale = 1, maxScale = 8;
 
     private TYPE operationType = TYPE.Simple;
     private final Font defaultFont = UIManager.getDefaults().getFont("Label.font");
@@ -89,7 +93,7 @@ public class DropDownWindow {
                         }
                     }
 
-                    setLoadingState(true, files.size());
+                    setLoadingState(true);
                     processFiles(files);
                     
                     return true;
@@ -103,7 +107,7 @@ public class DropDownWindow {
         };
     }
 
-    private void setLoadingState(boolean state, int fileCount) {
+    private void setLoadingState(boolean state) {
         loading = state;
         
         toggleControls(!state);
@@ -112,21 +116,25 @@ public class DropDownWindow {
     }
 
     private void toggleControls(boolean enabled) {
+        typeComboBox.setEnabled(enabled);
+        
         scaleSlider.setEnabled(enabled);
         scaleField.setEnabled(enabled);
         colorSlider.setEnabled(enabled);
         colorField.setEnabled(enabled);
         spreadSlider.setEnabled(enabled);
         spreadField.setEnabled(enabled);
+        
         grayButton.setEnabled(enabled);
         dynamicButton.setEnabled(enabled);
+        hsbButton.setEnabled(enabled);
     }
 
     private void processFiles(List<File> files) {
         final int total = files.size();
         
         dropLabel.setText("LOADING (1/" + total + ")");
-        setLoadingState(true, total);
+        setLoadingState(true);
 
         SwingWorker<Void, Integer> worker = new SwingWorker<>() {
             @Override
@@ -135,7 +143,8 @@ public class DropDownWindow {
                         colorLevels,
                         scale,
                         spread,
-                        rangeQuantization,
+                        rangeQ,
+                        useHsb,
                         operationType,
                         grayScale
                 );
@@ -177,7 +186,7 @@ public class DropDownWindow {
 
         resetTimer = new Timer(1000, e -> {
             dropLabel.setText("Drop IMAGE files here");
-            setLoadingState(false, 0);
+            setLoadingState(false);
         });
         resetTimer.setRepeats(false);
         resetTimer.start();
@@ -196,13 +205,31 @@ public class DropDownWindow {
 
         JPanel spreadPanel = createSpreadPanel();
 
-        grayButton = createToggleButton("Gray Scale", () -> grayScale = !grayScale);
-        dynamicButton = createToggleButton("Dynamic Range", () -> rangeQuantization = !rangeQuantization);
-
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 5));
+        grayButton = new JButton("Gray Scale");
+        dynamicButton = new JButton("Dynamic Range");
+        hsbButton = new JButton("HSB");
+        
+        JButton[] buttons = {grayButton, dynamicButton, hsbButton};
+        
+        BooleanSupplier[] getters = {
+            () -> grayScale,
+            () -> rangeQ,
+            () -> useHsb
+        };
+        
+        List<Consumer<Boolean>> setters = List.of(
+                val -> grayScale = val,
+                val -> rangeQ = val,
+                val -> useHsb = val
+        );
+        
+        configureToggleButtons(buttons, getters, setters);
+        
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 1, 0, 5));
         buttonPanel.setBackground(Color.BLACK);
         buttonPanel.add(grayButton);
         buttonPanel.add(dynamicButton);
+        buttonPanel.add(hsbButton);
 
         JPanel sliderPanel = new JPanel();
         sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.Y_AXIS));
@@ -334,31 +361,6 @@ public class DropDownWindow {
         return panel;
     }
 
-    private JButton createToggleButton(String text, Runnable toggleAction) {
-        JButton button = new JButton(text);
-        
-        styleButton(button);
-        
-        button.addActionListener(e -> {
-            if (!loading) {
-                toggleAction.run();
-                toggleButtonColor(button, text.equals("Gray Scale") ? grayScale : rangeQuantization);
-            }
-        });
-        
-        return button;
-    }
-
-    private void toggleButtonColor(JButton button, boolean active) {
-        if (active) {
-            button.setBackground(Color.WHITE);
-            button.setForeground(Color.BLACK);
-        } else {
-            button.setBackground(Color.BLACK);
-            button.setForeground(Color.WHITE);
-        }
-    }
-
     private void styleButton(JButton button) {
         button.setBackground(Color.BLACK);
         button.setForeground(Color.WHITE);
@@ -438,14 +440,14 @@ public class DropDownWindow {
             
             @Override
             protected JButton createArrowButton() {
-                BasicArrowButton arrow = new BasicArrowButton(SwingConstants.SOUTH, Color.BLACK, Color.RED, Color.WHITE, Color.BLUE);
+                BasicArrowButton arrow = new BasicArrowButton(SwingConstants.SOUTH, Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK);
                 arrow.setBorder(BorderFactory.createEmptyBorder());
                 
                 return arrow;
             }
             
             protected JButton createArrowButton(int direction) {
-                BasicArrowButton arrow = new BasicArrowButton(direction, Color.BLACK, Color.RED, Color.WHITE, Color.BLUE);
+                BasicArrowButton arrow = new BasicArrowButton(direction, Color.BLACK, Color.WHITE, Color.WHITE, Color.BLACK);
                 arrow.setBorder(BorderFactory.createEmptyBorder());
                 
                 return arrow;
@@ -462,5 +464,43 @@ public class DropDownWindow {
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((screen.width - frame.getWidth()) / 2, (screen.height - frame.getHeight()) / 2);
         frame.setVisible(true);
+    }
+    
+    private void configureToggleButtons(JButton[] buttons, BooleanSupplier[] getters, List<Consumer<Boolean>> setters) {
+        if (buttons.length != getters.length || getters.length != setters.size()) {
+            throw new IllegalArgumentException(
+                    "Buttons, getters and setters must have the same size"
+            );
+        }
+
+        for (int i = 0; i < buttons.length; i++) {
+            JButton btn = buttons[i];
+            BooleanSupplier get = getters[i];
+            Consumer<Boolean> set = setters.get(i);
+
+            styleButton(btn);
+            
+            updateToggleButtonColor(btn, get.getAsBoolean());
+            
+            btn.addActionListener(e -> {
+                if (loading) {
+                    return;
+                }
+                
+                boolean newState = !get.getAsBoolean();
+                set.accept(newState);
+                updateToggleButtonColor(btn, newState);
+            });
+        }
+    }
+
+    private void updateToggleButtonColor(JButton btn, boolean active) {
+        if (active) {
+            btn.setBackground(Color.WHITE);
+            btn.setForeground(Color.BLACK);
+        } else {
+            btn.setBackground(Color.BLACK);
+            btn.setForeground(Color.WHITE);
+        }
     }
 }

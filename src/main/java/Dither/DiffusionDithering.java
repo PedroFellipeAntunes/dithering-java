@@ -1,10 +1,12 @@
 package Dither;
 
+import Dither.Util.DataConverter;
+import Dither.Interface.ColorQuantizer;
 import java.awt.image.BufferedImage;
 
 public class DiffusionDithering {
-    private final Quantization b = new Quantization();
-    private final ConvertRgbaInteger cri = new ConvertRgbaInteger();
+    private final ColorQuantizer quantizer;
+    private final DataConverter dc = new DataConverter();
     
     private final boolean rangeQ;
     private final int bitValue;
@@ -14,13 +16,16 @@ public class DiffusionDithering {
      * Constructs a DiffusionDithering instance with the specified number of
      * quantization levels and whether to use dynamic‑range quantization.
      *
+     * @param quantizer the color-quantization strategy (e.g. RgbQuantizer or
+     * HsbQuantizer)
      * @param bitValue the number of discrete color levels for quantization
      * (e.g., 2, 4, 8, …)
      * @param rangeQ true to apply dynamic‑range quantization, false for uniform
      * quantization
      * @param spread double value defines how much dither will be applied
      */
-    public DiffusionDithering(int bitValue, boolean rangeQ, double spread) {
+    public DiffusionDithering(ColorQuantizer quantizer, int bitValue, boolean rangeQ, double spread) {
+        this.quantizer = quantizer;
         this.bitValue = bitValue;
         this.rangeQ = rangeQ;
         this.spread = spread;
@@ -152,29 +157,17 @@ public class DiffusionDithering {
         int matrixWidth = diffusion[0].length;
         int matrixCenterX = matrixWidth / 2;
         
-        double max = 255, min = 0; // Default values to compile
-        
         if (rangeQ) {
-            double[] range = b.computeSymmetricLuminanceRange(image);
-            min = range[0];
-            max = range[1];
+            quantizer.prepare(image, bitValue);
         }
         
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
-                int[] oldRGBA = cri.convertFromIntegerToArray(image.getRGB(x, y));
+                int[] oldRGBA = dc.convertFromIntegerToArray(image.getRGB(x, y));
                 
-                int[] newRGBA = oldRGBA.clone();
+                int[] newRGBA = quantizer.quantize(oldRGBA, bitValue, rangeQ);
                 
-                for (int c = 1; c <= 3; c++) {
-                    if (rangeQ) {
-                        newRGBA[c] = b.quantizeWithRange(oldRGBA[c], this.bitValue, min, max);
-                    } else {
-                        newRGBA[c] = b.quantizeChannel(oldRGBA[c], this.bitValue);
-                    }
-                }
-                
-                image.setRGB(x, y, cri.convertFromArrayToInteger(newRGBA));
+                image.setRGB(x, y, dc.convertFromArrayToInteger(newRGBA));
                 
                 int[] error = new int[oldRGBA.length];
                 
@@ -205,13 +198,13 @@ public class DiffusionDithering {
             return;
         }
         
-        int[] rgba = cri.convertFromIntegerToArray(image.getRGB(x, y));
+        int[] rgba = dc.convertFromIntegerToArray(image.getRGB(x, y));
         
         // Ignore alpha
         for (int i = 1; i < rgba.length; i++) {
             rgba[i] = Math.max(0, Math.min(255, rgba[i] + (int) (error[i] * factor)));
         }
         
-        image.setRGB(x, y, cri.convertFromArrayToInteger(rgba));
+        image.setRGB(x, y, dc.convertFromArrayToInteger(rgba));
     }
 }

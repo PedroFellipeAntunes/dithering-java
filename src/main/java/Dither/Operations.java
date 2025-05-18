@@ -1,5 +1,11 @@
 package Dither;
 
+import Dither.Util.Scaler;
+import Dither.Util.TYPE;
+import Dither.Interface.HsbQuantizer;
+import Dither.Interface.ColorQuantizer;
+import Dither.Interface.RgbQuantizer;
+
 import FileManager.PngReader;
 import FileManager.PngSaver;
 
@@ -8,6 +14,7 @@ import Windows.ImageViewer;
 import java.awt.image.BufferedImage;
 
 public class Operations {
+    private final boolean useHsb;
     private final int scale;
     private final int colorLevels;
     private final double spread;
@@ -23,15 +30,17 @@ public class Operations {
      * @param scale Scaling factor (for downscaling/upscaling).
      * @param spread Error diffusion spread factor.
      * @param rangeQ Whether to apply range quantization.
+     * @param useHsb Wheter to use RGB or HSB.
      * @param operation Dithering algorithm type to use.
      * @param grayscale Whether to convert the image to grayscale before processing.
      */
-    public Operations(int colorLevels, int scale, double spread, boolean rangeQ, TYPE operation, boolean grayscale) {
+    public Operations(int colorLevels, int scale, double spread, boolean rangeQ, boolean useHsb, TYPE operation, boolean grayscale) {
         this.colorLevels = colorLevels;
         this.scale = scale;
         this.spread = spread;
         this.operation = operation;
         this.rangeQ = rangeQ;
+        this.useHsb = useHsb;
         this.grayscale = grayscale;
     }
     
@@ -64,36 +73,44 @@ public class Operations {
     }
     
     private void applyDithering(BufferedImage image) {
+        ColorQuantizer cq;
+        
+        if (useHsb) {
+            cq = new HsbQuantizer();
+        } else {
+            cq = new RgbQuantizer();
+        }
+        
         switch (operation) {
             case Bayer8x8 -> {
-                new OrderedDithering(bayerDitherSize, colorLevels, rangeQ, spread).applyDither(image);
+                new OrderedDithering(cq, bayerDitherSize, colorLevels, rangeQ, spread).applyDither(image);
             }
             case Floyd_Steinberg -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applyFloydSteinberg(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applyFloydSteinberg(image);
             }
             case JJN -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applyJarvisJudiceNinke(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applyJarvisJudiceNinke(image);
             }
             case Stucki -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applyStucki(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applyStucki(image);
             }
             case Atkinson -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applyAtkinson(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applyAtkinson(image);
             }
             case Burkes -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applyBurkes(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applyBurkes(image);
             }
             case Sierra -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applySierra(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applySierra(image);
             }
             case Two_Row_Sierra -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applyTwoRowSierra(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applyTwoRowSierra(image);
             }
             case Sierra_Lite -> {
-                new DiffusionDithering(colorLevels, rangeQ, spread).applySierraLite(image);
+                new DiffusionDithering(cq, colorLevels, rangeQ, spread).applySierraLite(image);
             }
             default -> {
-                new Quantization().applyQuantization(image, colorLevels, rangeQ);
+                cq.quantizeImage(image, colorLevels, rangeQ);
             }
         }
     }
